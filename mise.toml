@@ -1,2 +1,14 @@
 [tools]
 zig = "0.15.1"
+
+
+[tasks.build]
+run = "zig build"
+
+[tasks.burn]
+confirm  = "Insert SD Card"
+depends  = ["build"]
+run = """
+cp {{config_root}}/zig-out/firmware/blinky.uf2 "/Volumes/NO NAME/pico2-apps"
+diskutil umount "/Volumes/NO NAME"
+"""
