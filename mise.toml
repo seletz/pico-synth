@@ -1,5 +1,5 @@
 [tools]
-zig = "0.15.1"
+zig = "0.15.2"
 
 
 [tasks.build]
