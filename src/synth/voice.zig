@@ -4,7 +4,7 @@ const osc = @import("osc.zig");
 const filter = @import("filter.zig");
 const env = @import("env.zig");
 
-const Voice = struct {
+pub const Voice = struct {
     osc: osc.Osc = .{},
     lpf: filter.Biquad = .{},
     env: env.ADSREnv = .{},

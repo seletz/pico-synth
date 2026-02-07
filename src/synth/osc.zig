@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const Osc = struct {
+pub const Osc = struct {
     phase: f32 = 0,
     freq: f32 = 440,
     sample_rate: f32 = 44100,

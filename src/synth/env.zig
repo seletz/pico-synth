@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const ASDREnv = struct {
+pub const ADSREnv = struct {
     stage: enum { idle, attack, decay, sustain, release } = .idle,
     level: f32 = 0,
 
@@ -9,7 +9,7 @@ const ASDREnv = struct {
     sustain_level: f32 = 0,
     release_rate: f32 = 0,
 
-    pub fn trigger(self: *ASDREnv, a: f32, d: f32, s: f32, r: f32, sample_rate: f32) void {
+    pub fn trigger(self: *ADSREnv, a: f32, d: f32, s: f32, r: f32, sample_rate: f32) void {
         self.attack_rate = 1.0 / (a * sample_rate);
         self.decay_rate = (1.0 - s) / (d * sample_rate);
         self.sustain_level = s;
@@ -18,11 +18,11 @@ const ASDREnv = struct {
         self.level = 0;
     }
 
-    pub fn release(self: *ASDREnv) void {
+    pub fn release(self: *ADSREnv) void {
         self.stage = .release;
     }
 
-    pub fn next(self: *ASDREnv) f32 {
+    pub fn next(self: *ADSREnv) f32 {
         switch (self.stage) {
             .idle => return 0,
 
@@ -56,7 +56,7 @@ const ASDREnv = struct {
     }
 };
 
-const AREnv = struct {
+pub const AREnv = struct {
     stage: enum { idle, attack, release } = .idle,
     level: f32 = 0,
     attack_rate: f32 = 0,

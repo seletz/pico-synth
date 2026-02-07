@@ -1,7 +1,7 @@
 const std = @import("std");
 const voice = @import("voice.zig");
 
-const Synth = struct {
+pub const Synth = struct {
     voices: [4]voice.Voice = [_]voice.Voice{.{}} ** 4,
     master_gain: f32 = 0.8,
 

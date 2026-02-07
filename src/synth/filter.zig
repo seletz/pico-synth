@@ -1,8 +1,8 @@
 const std = @import("std");
 
-const Quality = struct { butterworth: f32 = 0.707, classic: f32 = 5, screaming: f32 = 10 };
+pub const Quality = struct { butterworth: f32 = 0.707, classic: f32 = 5, screaming: f32 = 10 };
 
-const Biquad = struct {
+pub const Biquad = struct {
     // Coefficients
     b0: f32 = 1,
     b1: f32 = 0,
