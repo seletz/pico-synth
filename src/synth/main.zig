@@ -9,6 +9,8 @@ const clocks = rp2xxx.clocks;
 const regs = microzig.chip.registers;
 const multicore = rp2xxx.multicore;
 
+const osc = @import("osc.zig");
+
 // Compile-time pin configuration
 const pin_config = rp2xxx.pins.GlobalConfiguration{
     // PicoCalc: GPIO2 is available on the connector on the right side.
@@ -55,11 +57,19 @@ pub const rp2350_options: microzig.Options = .{
 
 pub const microzig_options = if (chip == .RP2040) rp2040_options else rp2350_options;
 
-const TIMER_DELAY: u32 = 1_000_000;
+const TIMER_DELAY: u32 = 23; // 23us -> ca 43khz
+
+var sine_osc = osc.Osc{ .phase = 0.0, .freq = 440.0, .waveform = .sine };
 
 fn timer_interrupt() callconv(.c) void {
     const cs = microzig.interrupt.enter_critical_section();
     defer cs.leave();
+
+    const sample = sine_osc.next();
+    const pwm_value: u8 = @intFromFloat((sample + 1.0) * 127.5);
+
+    pins.pwm_r.set_level(pwm_value);
+    pins.pwm_l.set_level(pwm_value);
 
     pins.led_blue.toggle();
 
