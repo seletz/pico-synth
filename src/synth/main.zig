@@ -13,7 +13,19 @@ const multicore = rp2xxx.multicore;
 const pin_config = rp2xxx.pins.GlobalConfiguration{
     // PicoCalc: GPIO2 is available on the connector on the right side.
     .GPIO2 = .{
-        .name = "led",
+        .name = "led_red",
+        .direction = .out,
+    },
+    .GPIO3 = .{
+        .name = "led_green",
+        .direction = .out,
+    },
+    .GPIO4 = .{
+        .name = "led_blue",
+        .direction = .out,
+    },
+    .GPIO5 = .{
+        .name = "led_yellow",
         .direction = .out,
     },
     .GPIO27 = .{
@@ -43,14 +55,16 @@ pub const rp2350_options: microzig.Options = .{
 
 pub const microzig_options = if (chip == .RP2040) rp2040_options else rp2350_options;
 
+const TIMER_DELAY: u32 = 1_000_000;
+
 fn timer_interrupt() callconv(.c) void {
     const cs = microzig.interrupt.enter_critical_section();
     defer cs.leave();
 
-    pins.led.toggle();
+    pins.led_blue.toggle();
 
     timer.INTR.modify(.{ .ALARM_0 = 1 });
-    set_alarm(1_000_000);
+    set_alarm(TIMER_DELAY);
 }
 
 pub fn set_alarm(us: u32) void {
@@ -66,4 +80,15 @@ pub fn main() !void {
 
     pins.pwm_r.slice().set_wrap(0xff);
     pins.pwm_l.slice().set_wrap(0xff);
+    timer.INTE.toggle(.{ .ALARM_0 = 1 });
+
+    set_alarm(TIMER_DELAY);
+
+    interrupt.enable(timer_irq);
+    microzig.cpu.interrupt.enable_interrupts();
+
+    while (true) {
+        asm volatile ("wfi");
+        pins.led_red.toggle();
+    }
 }
