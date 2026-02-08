@@ -1,6 +1,11 @@
 [tools]
 zig = "0.15.2"
 
+[vars]
+sdcard_path = "/Volumes/NO NAME/pico2-apps"
+
+[tasks.clean]
+run = "rm -rf {{config_root}}/zig-out"
 
 [tasks.build]
 run = "zig build"
@@ -9,7 +14,8 @@ run = "zig build"
 confirm  = "Insert SD Card"
 depends  = ["build"]
 run = """
-cp {{config_root}}/zig-out/firmware/blinky.uf2 "/Volumes/NO NAME/pico2-apps"
-cp {{config_root}}/zig-out/firmware/synth.uf2 "/Volumes/NO NAME/pico2-apps"
+cp {{config_root}}/zig-out/firmware/blinky.uf2 "{{vars.sdcard_path}}"
+cp {{config_root}}/zig-out/firmware/synth.uf2 "{{vars.sdcard_path}}"
+ls -la "{{vars.sdcard_path}}"
 diskutil umount "/Volumes/NO NAME"
 """
