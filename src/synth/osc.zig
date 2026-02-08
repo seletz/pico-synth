@@ -7,7 +7,7 @@ pub const Osc = struct {
     waveform: enum { sine, saw, square, tri } = .sine,
 
     pub fn next(self: *Osc) f32 {
-        const out = switch (self.waveform) {
+        const out: f32 = switch (self.waveform) {
             .sine => @sin(self.phase * std.math.tau),
             .saw => 2.0 * self.phase - 1.0,
             .square => if (self.phase < 0.5) 1.0 else -1.0,
