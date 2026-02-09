@@ -90,6 +90,8 @@ pub fn main() !void {
 
     pins.pwm_r.slice().set_wrap(0xff);
     pins.pwm_l.slice().set_wrap(0xff);
+    pins.pwm_r.slice().enable();
+    pins.pwm_l.slice().enable();
     timer.INTE.toggle(.{ .ALARM_0 = 1 });
 
     set_alarm(TIMER_DELAY);
