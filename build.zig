@@ -42,4 +42,16 @@ pub fn build(b: *std.Build) void {
         }),
     });
     b.installArtifact(native);
+
+    // Unit tests for synth DSP modules
+    const synth_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/synth/synth.zig"),
+            .target = b.resolveTargetQuery(.{}),
+            .optimize = .Debug,
+        }),
+    });
+    const run_tests = b.addRunArtifact(synth_tests);
+    const test_step = b.step("test", "Run synth unit tests");
+    test_step.dependOn(&run_tests.step);
 }

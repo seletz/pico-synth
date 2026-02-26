@@ -1,6 +1,8 @@
 const std = @import("std");
 const voice = @import("voice.zig");
 
+const testing = std.testing;
+
 pub const Synth = struct {
     voices: [4]voice.Voice = [_]voice.Voice{.{}} ** 4,
     master_gain: f32 = 0.8,
@@ -33,3 +35,22 @@ pub const Synth = struct {
         return std.math.clamp(mix * self.master_gain, -1.0, 1.0);
     }
 };
+
+test "sine peak at quarter period" {
+    var s = Synth{};
+    s.master_gain = 1.0;
+    // Transparent envelope (instant attack, full sustain, no release), high cutoff
+    s.noteOn(440, 20000, 0, 0, 1, 0);
+    s.voices[0].gain = 1.0;
+
+    // Sine peak at quarter period: round(44100 / 440 / 4) = 25
+    const peak_sample: usize = 25;
+    var peak_value: f32 = 0;
+    for (0..peak_sample + 1) |i| {
+        const sample = s.render();
+        if (i == peak_sample) {
+            peak_value = sample;
+        }
+    }
+    try testing.expect(peak_value >= 0.99);
+}
