@@ -56,6 +56,79 @@ pub const ADSREnv = struct {
     }
 };
 
+const testing = std.testing;
+
+test "ADSR state machine transitions" {
+    var env = ADSREnv{};
+
+    // Starts idle
+    try testing.expectEqual(.idle, env.stage);
+    try testing.expect(env.next() == 0);
+
+    // Trigger: attack=0.01s, decay=0.01s, sustain=0.5, release=0.01s @ 1000 Hz
+    env.trigger(0.01, 0.01, 0.5, 0.01, 1000);
+    try testing.expectEqual(.attack, env.stage);
+
+    // Attack: 0.01s * 1000 Hz = 10 samples to reach 1.0
+    for (0..9) |_| {
+        _ = env.next();
+    }
+    try testing.expectEqual(.attack, env.stage);
+    _ = env.next(); // sample 10 should hit 1.0
+    try testing.expectEqual(.decay, env.stage);
+    try testing.expect(env.level == 1.0);
+
+    // Decay: from 1.0 to sustain 0.5, rate = 0.5/10 = 0.05/sample → 10 samples
+    for (0..9) |_| {
+        _ = env.next();
+    }
+    try testing.expectEqual(.decay, env.stage);
+    _ = env.next(); // sample 10 should reach sustain
+    try testing.expectEqual(.sustain, env.stage);
+    try testing.expect(env.level == 0.5);
+
+    // Sustain holds indefinitely
+    for (0..100) |_| {
+        _ = env.next();
+    }
+    try testing.expectEqual(.sustain, env.stage);
+    try testing.expect(env.level == 0.5);
+
+    // Release: from 0.5 to 0, rate = 0.5/10 = 0.05/sample → 10 samples
+    env.release();
+    try testing.expectEqual(.release, env.stage);
+    for (0..9) |_| {
+        _ = env.next();
+    }
+    try testing.expectEqual(.release, env.stage);
+    _ = env.next(); // sample 10 should hit 0
+    try testing.expectEqual(.idle, env.stage);
+    try testing.expect(env.level == 0);
+}
+
+test "ADSR instant attack when attack time is zero" {
+    var env = ADSREnv{};
+    env.trigger(0, 0.01, 0.5, 0.01, 1000);
+
+    // First sample should jump to 1.0 and transition to decay
+    _ = env.next();
+    try testing.expectEqual(.decay, env.stage);
+    try testing.expect(env.level == 1.0);
+}
+
+test "ADSR skips decay when sustain is 1.0" {
+    var env = ADSREnv{};
+    env.trigger(0.01, 0.01, 1.0, 0.01, 1000);
+
+    // Run through attack (10 samples)
+    for (0..10) |_| _ = env.next();
+    try testing.expectEqual(.decay, env.stage);
+    // decay_rate is 0 when sustain >= 1.0, so first decay sample transitions immediately
+    _ = env.next();
+    try testing.expectEqual(.sustain, env.stage);
+    try testing.expect(env.level == 1.0);
+}
+
 pub const AREnv = struct {
     stage: enum { idle, attack, release } = .idle,
     level: f32 = 0,
