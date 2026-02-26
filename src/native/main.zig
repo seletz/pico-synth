@@ -79,9 +79,9 @@ pub fn main() void {
         defer rl.endDrawing();
 
         rl.clearBackground(.ray_white);
-        rl.drawText("QWERTZ keyboard → voice 0", 10, 10, 20, .dark_gray);
-        rl.drawText("A S D F G H J K = C4..C5", 10, 40, 16, .gray);
-        rl.drawText("W E   T Z U     = sharps", 10, 60, 16, .gray);
+        rl.drawText("QWERTZ keyboard => voice 0", 10, 10, 20, .dark_gray);
+        rl.drawText("W E   T Z U     = sharps", 20, 40, 16, .gray);
+        rl.drawText("A S D F G H J K = C4..C5", 10, 60, 16, .gray);
         rl.drawText("ESC to quit", 10, 170, 14, .light_gray);
     }
 }
