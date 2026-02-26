@@ -1,2 +1,3 @@
 .zig-cache
 zig-out/firmware
+/zig-out/bin
