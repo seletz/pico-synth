@@ -37,6 +37,9 @@
             // .hash = "microzig-0.15.0-D20YSTUgCADpOaRtQ4SOk0HJ_E4342rgS9m3LQGhITbd",
             .path = "../microzig",
         },
+        .raylib_zig = .{
+            .path = "../raylib-zig",
+        },
     },
     .paths = .{
         "build.zig",

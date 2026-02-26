@@ -30,6 +30,10 @@ pub fn build(b: *std.Build) void {
     const synth_module = b.createModule(.{
         .root_source_file = b.path("src/synth/synth.zig"),
     });
+    const raylib_dep = b.dependency("raylib_zig", .{
+        .target = b.resolveTargetQuery(.{}),
+        .optimize = .Debug,
+    });
     const native = b.addExecutable(.{
         .name = "synth-native",
         .root_module = b.createModule(.{
@@ -38,9 +42,11 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
             .imports = &.{
                 .{ .name = "synth", .module = synth_module },
+                .{ .name = "raylib", .module = raylib_dep.module("raylib") },
             },
         }),
     });
+    native.linkLibrary(raylib_dep.artifact("raylib"));
     b.installArtifact(native);
 
     // Unit tests for synth DSP modules
