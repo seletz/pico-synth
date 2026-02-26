@@ -21,17 +21,26 @@ pub fn main() void {
     };
     defer rl.unloadAudioStream(stream);
 
-    // Unity gain, envelope
+    // Configure voice 0
     synth.master_gain = 1.0;
-    const voice = synth.noteOn(440, 20000, 0.5, 0.2, 0.5, 0.8);
-    synth.voices[0].gain = 1.0;
+    synth.voices[0].gain = 0.5;
+    synth.voices[0].setWaveform(.sine);
+    synth.voices[0].setADSR(0.5, 0.2, 0.5, 0.8);
+
+    synth.voices[1].gain = 0.5;
+    synth.voices[1].setWaveform(.sine);
+    synth.voices[1].setADSR(0.5, 0.2, 0.5, 0.8);
 
     rl.setAudioStreamCallback(stream, audioCallback);
     rl.playAudioStream(stream);
 
     std.debug.print("playing 440 Hz sine for 5 seconds...\n", .{});
+    synth.noteOn(0, 440);
+    synth.noteOn(1, 460);
     std.Thread.sleep(2 * std.time.ns_per_s);
-    synth.voices[voice].env.release();
-    std.Thread.sleep(3 * std.time.ns_per_s);
+    synth.noteOff(0);
+    std.Thread.sleep(1 * std.time.ns_per_s);
+    synth.noteOff(1);
+    std.Thread.sleep(2 * std.time.ns_per_s);
     std.debug.print("done.\n", .{});
 }

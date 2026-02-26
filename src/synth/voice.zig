@@ -12,12 +12,39 @@ pub const Voice = struct {
     active: bool = false,
     age: u64 = 0,
 
-    pub fn trigger(self: *Voice, freq: f32, cutoff: f32, attack: f32, decay: f32, sustain: f32, release: f32) void {
+    // Per-voice persistent settings (SID-style)
+    attack: f32 = 0,
+    decay: f32 = 0,
+    sustain: f32 = 1.0,
+    release_time: f32 = 0,
+    cutoff: f32 = 20000,
+
+    pub fn setADSR(self: *Voice, a: f32, d: f32, s: f32, r: f32) void {
+        self.attack = a;
+        self.decay = d;
+        self.sustain = s;
+        self.release_time = r;
+    }
+
+    pub fn setCutoff(self: *Voice, cutoff_freq: f32) void {
+        self.cutoff = cutoff_freq;
+        self.lpf.setLowpass(cutoff_freq, 1.0, 44100);
+    }
+
+    pub fn setWaveform(self: *Voice, waveform: @FieldType(osc.Osc, "waveform")) void {
+        self.osc.waveform = waveform;
+    }
+
+    pub fn trigger(self: *Voice, freq: f32) void {
         self.osc.freq = freq;
-        self.lpf.setLowpass(cutoff, 1.0, 44100);
-        self.env.trigger(attack, decay, sustain, release, 44100);
+        self.lpf.setLowpass(self.cutoff, 1.0, 44100);
+        self.env.trigger(self.attack, self.decay, self.sustain, self.release_time, 44100);
         self.active = true;
         self.age = 0;
+    }
+
+    pub fn release(self: *Voice) void {
+        self.env.release();
     }
 
     pub fn render(self: *Voice) f32 {
