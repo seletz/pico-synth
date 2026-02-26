@@ -7,15 +7,15 @@ const env = @import("env.zig");
 pub const Voice = struct {
     osc: osc.Osc = .{},
     lpf: filter.Biquad = .{},
-    env: env.AREnv = .{},
+    env: env.ADSREnv = .{},
     gain: f32 = 0.25,
     active: bool = false,
     age: u64 = 0,
 
-    pub fn trigger(self: *Voice, freq: f32, cutoff: f32, attack: f32, decay: f32) void {
+    pub fn trigger(self: *Voice, freq: f32, cutoff: f32, attack: f32, decay: f32, sustain: f32, release: f32) void {
         self.osc.freq = freq;
         self.lpf.setLowpass(cutoff, 1.0, 44100);
-        self.env.trigger(attack, decay, 44100);
+        self.env.trigger(attack, decay, sustain, release, 44100);
         self.active = true;
         self.age = 0;
     }

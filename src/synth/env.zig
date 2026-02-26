@@ -10,10 +10,10 @@ pub const ADSREnv = struct {
     release_rate: f32 = 0,
 
     pub fn trigger(self: *ADSREnv, a: f32, d: f32, s: f32, r: f32, sample_rate: f32) void {
-        self.attack_rate = 1.0 / (a * sample_rate);
-        self.decay_rate = (1.0 - s) / (d * sample_rate);
+        self.attack_rate = if (a <= 0) 1.0 else 1.0 / (a * sample_rate);
+        self.decay_rate = if (d <= 0 or s >= 1.0) 0.0 else (1.0 - s) / (d * sample_rate);
         self.sustain_level = s;
-        self.release_rate = s / (r * sample_rate);
+        self.release_rate = if (r <= 0) 1.0 else s / (r * sample_rate);
         self.stage = .attack;
         self.level = 0;
     }

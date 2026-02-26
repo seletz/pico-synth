@@ -5,9 +5,9 @@ pub const Synth = struct {
     voices: [4]voice.Voice = [_]voice.Voice{.{}} ** 4,
     master_gain: f32 = 0.8,
 
-    pub fn noteOn(self: *Synth, freq: f32, cutoff: f32, attack: f32, decay: f32) void {
+    pub fn noteOn(self: *Synth, freq: f32, cutoff: f32, attack: f32, decay: f32, sustain: f32, release: f32) void {
         const idx = self.findFreeVoice();
-        self.voices[idx].trigger(freq, cutoff, attack, decay);
+        self.voices[idx].trigger(freq, cutoff, attack, decay, sustain, release);
     }
 
     fn findFreeVoice(self: *Synth) usize {
