@@ -15,7 +15,9 @@ Tool versions are managed by [mise](https://mise.jdx.dev). Current toolchain: Zi
 - `mise run build` — same as `zig build`
 - `mise run burn` — build, copy UF2 files to SD card at `/Volumes/NO NAME/pico2-apps`, then unmount
 
-There is no test suite. The build itself is the primary validation step.
+- `zig build test` — run unit tests (synth DSP modules: envelope, oscillator, voice)
+
+For bug fixes, use TDD: write a failing test first (red), then apply the fix (green).
 
 ## Dependencies
 
@@ -55,7 +57,7 @@ The signal flow is: **Oscillator → Filter → Envelope → Gain**, computed pe
 `src/native/main.zig` provides an interactive desktop version using raylib:
 - Audio via raylib audio stream callback at 44100 Hz, 32-bit float, mono
 - Window with game loop (`initWindow` / `beginDrawing` / `endDrawing`)
-- Keyboard input maps one octave (C4–C5) to voice 0
+- Keyboard input maps one octave (C4–C5) to voice 0 using `isKeyPressed`/`isKeyReleased` (state-based, not queue-based)
 
 **GLFW keyboard on macOS**: raylib bundles GLFW which uses a hardcoded scancode table (`cocoa_init.m:createKeyTablesCocoa`) mapping macOS virtual keycodes to US QWERTY key positions. On a QWERTZ keyboard, Z and Y are physically swapped — use `.y` for the key labeled "Z" and vice versa.
 
