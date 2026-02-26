@@ -15,7 +15,7 @@ pub const ADSREnv = struct {
         self.sustain_level = s;
         self.release_rate = if (r <= 0) 1.0 else s / (r * sample_rate);
         self.stage = .attack;
-        self.level = 0;
+        // Keep current level to avoid click on re-trigger during release
     }
 
     pub fn release(self: *ADSREnv) void {
@@ -127,6 +127,30 @@ test "ADSR skips decay when sustain is 1.0" {
     _ = env.next();
     try testing.expectEqual(.sustain, env.stage);
     try testing.expect(env.level == 1.0);
+}
+
+test "ADSR re-trigger during release does not click (level must not jump to zero)" {
+    var env = ADSREnv{};
+
+    // Trigger with short times @ 1000 Hz
+    env.trigger(0.01, 0.01, 0.5, 0.02, 1000);
+
+    // Run through attack (10 samples) + decay (10 samples) → sustain
+    for (0..20) |_| _ = env.next();
+    try testing.expectEqual(.sustain, env.stage);
+
+    // Release — run a few samples so level drops but is still > 0
+    env.release();
+    for (0..5) |_| _ = env.next();
+    try testing.expectEqual(.release, env.stage);
+    const level_before_retrigger = env.level;
+    try testing.expect(level_before_retrigger > 0);
+
+    // Re-trigger while still releasing
+    env.trigger(0.01, 0.01, 0.5, 0.02, 1000);
+
+    // Level must not drop below where it was — that would be a click
+    try testing.expect(env.level >= level_before_retrigger);
 }
 
 pub const AREnv = struct {
