@@ -25,4 +25,21 @@ pub fn build(b: *std.Build) void {
 
     mb.install_firmware(blinky, .{});
     mb.install_firmware(synth, .{});
+
+    // Native macOS build for testing DSP code without hardware
+    const synth_module = b.createModule(.{
+        .root_source_file = b.path("src/synth/synth.zig"),
+    });
+    const native = b.addExecutable(.{
+        .name = "synth-native",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/native/main.zig"),
+            .target = b.resolveTargetQuery(.{}),
+            .optimize = .Debug,
+            .imports = &.{
+                .{ .name = "synth", .module = synth_module },
+            },
+        }),
+    });
+    b.installArtifact(native);
 }
