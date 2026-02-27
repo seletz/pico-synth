@@ -22,3 +22,10 @@ cp {{config_root}}/zig-out/firmware/synth.uf2 "{{vars.sdcard_path}}"
 ls -la "{{vars.sdcard_path}}"
 diskutil umount "/Volumes/NO NAME"
 """
+
+[tasks.go]
+description = "Build and run the mac native binary"
+depends = [ "test", "build"]
+run = [
+    "{{config_root}}/zig-out/bin/synth-native"
+]
