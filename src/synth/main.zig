@@ -10,6 +10,7 @@ const regs = microzig.chip.registers;
 const multicore = rp2xxx.multicore;
 
 const osc = @import("osc.zig");
+const synth_mod = @import("synth.zig");
 
 // Compile-time pin configuration
 const pin_config = rp2xxx.pins.GlobalConfiguration{
@@ -59,13 +60,21 @@ pub const microzig_options = if (chip == .RP2040) rp2040_options else rp2350_opt
 
 const TIMER_DELAY: u32 = 23; // 23us -> ca 43khz
 
-var sine_osc = osc.Osc{ .phase = 0.0, .freq = 440.0, .waveform = .sine };
+var synth = synth_mod.Synth{ .master_gain = 1.0 };
+
+fn setup_synth() void {
+    // Configure voice 0
+    synth.master_gain = 1.0;
+    synth.voices[0].gain = 0.5;
+    synth.voices[0].setWaveform(.sine);
+    synth.voices[0].setADSR(0.01, 0.2, 0.5, 0.3);
+}
 
 fn timer_interrupt() callconv(.c) void {
     const cs = microzig.interrupt.enter_critical_section();
     defer cs.leave();
 
-    const sample = sine_osc.next();
+    const sample = synth.render();
     const pwm_value: u8 = @intFromFloat((sample + 1.0) * 127.5);
 
     pins.pwm_r.set_level(pwm_value);
@@ -77,8 +86,9 @@ fn timer_interrupt() callconv(.c) void {
     set_alarm(TIMER_DELAY);
 }
 
+const Duration = microzig.drivers.time.Duration;
+
 pub fn set_alarm(us: u32) void {
-    const Duration = microzig.drivers.time.Duration;
     const current = time.get_time_since_boot();
     const target = current.add_duration(Duration.from_us(us));
 
@@ -98,9 +108,27 @@ pub fn main() !void {
 
     interrupt.enable(timer_irq);
     microzig.cpu.interrupt.enable_interrupts();
+    
+    setup_synth();
+
+    const notes = @import("notes.zig");
+    const note_rate = 500; // ms
+    var note_timeout = microzig.drivers.time.make_timeout_us(time.get_time_since_boot(), note_rate * 1000);
 
     while (true) {
         asm volatile ("wfi");
         pins.led_red.toggle();
+        
+        var voice : usize = 0;
+
+        if (note_timeout.is_reached_by(time.get_time_since_boot())) {
+            note_timeout = microzig.drivers.time.make_timeout_us(time.get_time_since_boot(), note_rate * 1000);
+            pins.led_green.toggle();
+            
+            synth.noteOff(voice);
+            voice = (voice + 1) % 4;
+
+            synth.noteOn(voice, notes.freq.A4);
+        }
     }
 }
