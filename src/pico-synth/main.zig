@@ -9,8 +9,8 @@ const clocks = rp2xxx.clocks;
 const regs = microzig.chip.registers;
 const multicore = rp2xxx.multicore;
 
-const osc = @import("osc.zig");
-const synth_mod = @import("synth.zig");
+const synth_mod = @import("synth");
+const notes = synth_mod.notes;
 
 // Compile-time pin configuration
 const pin_config = rp2xxx.pins.GlobalConfiguration{
@@ -108,23 +108,22 @@ pub fn main() !void {
 
     interrupt.enable(timer_irq);
     microzig.cpu.interrupt.enable_interrupts();
-    
+
     setup_synth();
 
-    const notes = @import("notes.zig");
     const note_rate = 500; // ms
     var note_timeout = microzig.drivers.time.make_timeout_us(time.get_time_since_boot(), note_rate * 1000);
 
     while (true) {
         asm volatile ("wfi");
         pins.led_red.toggle();
-        
-        var voice : usize = 0;
+
+        var voice: usize = 0;
 
         if (note_timeout.is_reached_by(time.get_time_since_boot())) {
             note_timeout = microzig.drivers.time.make_timeout_us(time.get_time_since_boot(), note_rate * 1000);
             pins.led_green.toggle();
-            
+
             synth.noteOff(voice);
             voice = (voice + 1) % 4;
 

@@ -1,5 +1,7 @@
 const std = @import("std");
 const voice = @import("voice.zig");
+pub const notes = @import("notes.zig");
+pub const osc = @import("osc.zig");
 
 const testing = std.testing;
 

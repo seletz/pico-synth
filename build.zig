@@ -16,20 +16,24 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/blinky/main.zig"),
     });
 
+    const synth_module = b.createModule(.{
+        .root_source_file = b.path("src/synth/synth.zig"),
+    });
+
     const synth = mb.add_firmware(.{
         .name = "synth",
         .target = mb.ports.rp2xxx.boards.raspberrypi.pico2_arm,
         .optimize = .ReleaseSmall,
-        .root_source_file = b.path("src/synth/main.zig"),
+        .root_source_file = b.path("src/pico-synth/main.zig"),
+        .imports = &.{
+            .{ .name = "synth", .module = synth_module },
+        },
     });
 
     mb.install_firmware(blinky, .{});
     mb.install_firmware(synth, .{});
 
     // Native macOS build for testing DSP code without hardware
-    const synth_module = b.createModule(.{
-        .root_source_file = b.path("src/synth/synth.zig"),
-    });
     const raylib_dep = b.dependency("raylib_zig", .{
         .target = b.resolveTargetQuery(.{}),
         .optimize = .Debug,
