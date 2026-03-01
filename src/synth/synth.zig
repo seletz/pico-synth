@@ -2,6 +2,7 @@ const std = @import("std");
 const voice = @import("voice.zig");
 pub const notes = @import("notes.zig");
 pub const osc = @import("osc.zig");
+pub const lfo = @import("lfo.zig");
 
 const testing = std.testing;
 
@@ -21,6 +22,18 @@ pub const Synth = struct {
         var mix: f32 = 0;
         for (&self.voices) |*v| mix += v.render();
         return std.math.clamp(mix * self.master_gain, -1.0, 1.0);
+    }
+
+    pub fn setLfoRate(self: *Synth, voice_idx: usize, rate: f32) void {
+        self.voices[voice_idx].setLfoRate(rate);
+    }
+
+    pub fn setLfoDepth(self: *Synth, voice_idx: usize, depth: f32) void {
+        self.voices[voice_idx].setLfoDepth(depth);
+    }
+
+    pub fn setLfoWaveform(self: *Synth, voice_idx: usize, waveform: lfo.Waveform) void {
+        self.voices[voice_idx].setLfoWaveform(waveform);
     }
 };
 
