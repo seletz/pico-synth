@@ -24,6 +24,27 @@ ls -la "{{vars.sdcard_path}}"
 diskutil umount "/Volumes/NO NAME"
 """
 
+[tasks.clone-libs]
+description = "Clone build dependencies and reference audio libraries to ../  (skips existing)"
+run = """
+cd {{config_root}}/..
+# Build dependencies
+[ -d microzig ]                    || git clone https://github.com/ZigEmbeddedGroup/microzig.git
+[ -d raylib-zig ]                  || git clone git@github.com:raylib-zig/raylib-zig.git
+[ -d raylib ]                      || git clone https://github.com/raysan5/raylib.git
+# Reference audio libraries
+[ -d pico-audio ]                  || git clone https://github.com/ghostintranslation/pico-audio.git
+[ -d Pico-Sequencer-Synth ]        || git clone https://github.com/TuriSc/Pico-Sequencer-Synth.git
+[ -d picoDSP ]                     || git clone https://github.com/Na1w/picoDSP.git
+[ -d picoDSP-Edit ]                || git clone https://github.com/Na1w/picoDSP-Edit.git
+[ -d infinitedsp ]                 || git clone https://github.com/Na1w/infinitedsp.git
+[ -d pico-fmSynth ]                || git clone https://github.com/nyh-workshop/pico-fmSynth.git
+[ -d digital-synth-pra32-u2 ]      || git clone https://github.com/risgk/digital-synth-pra32-u2.git
+[ -d BackgroundAudio ]             || git clone https://github.com/earlephilhower/BackgroundAudio.git
+[ -d Raspberry-Pi-Pico-Libraries ] || git clone https://github.com/TuriSc/Raspberry-Pi-Pico-Libraries.git
+echo "All reference libraries present in $(pwd)"
+"""
+
 [tasks.go]
 description = "Build and run the mac native binary"
 depends = [ "test", "build"]
