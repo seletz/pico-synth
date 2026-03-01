@@ -4,6 +4,13 @@ const synth_mod = @import("synth");
 
 var synth = synth_mod.Synth{};
 
+// LFO state (mutable so keyboard controls can adjust)
+var lfo_rate: f32 = 2.0;
+var lfo_depth: f32 = 0.5;
+var lfo_waveform_idx: u8 = 0;
+const waveform_names = [_][*:0]const u8{ "sine", "tri", "saw", "square" };
+const waveform_values = [_]synth_mod.lfo.Waveform{ .sine, .tri, .saw, .square };
+
 fn audioCallback(buffer: ?*anyopaque, frames: c_uint) callconv(.c) void {
     const samples: [*]f32 = @ptrCast(@alignCast(buffer));
     for (0..frames) |i| {
@@ -34,7 +41,7 @@ const key_map = [_]KeyMapping{
 };
 
 pub fn main() void {
-    rl.initWindow(400, 200, "pico-synth");
+    rl.initWindow(400, 300, "pico-synth");
     defer rl.closeWindow();
 
     rl.initAudioDevice();
@@ -52,8 +59,9 @@ pub fn main() void {
     synth.voices[0].cutoff = 1500;
     synth.voices[0].setWaveform(.square);
     synth.voices[0].setADSR(0.01, 0.2, 0.5, 0.3);
-    synth.voices[0].setLfoRate(10);
-    synth.voices[0].setLfoDepth(0.5);
+    synth.setLfoRate(0, lfo_rate);
+    synth.setLfoDepth(0, lfo_depth);
+    synth.setLfoWaveform(0, waveform_values[lfo_waveform_idx]);
 
     rl.setAudioStreamCallback(stream, audioCallback);
     rl.playAudioStream(stream);
@@ -78,6 +86,28 @@ pub fn main() void {
             }
         }
 
+        // LFO controls: 1/2 = rate, 3/4 = depth, 5 = waveform
+        if (rl.isKeyPressed(.one)) {
+            lfo_rate = @max(0.1, lfo_rate - 0.5);
+            synth.setLfoRate(0, lfo_rate);
+        }
+        if (rl.isKeyPressed(.two)) {
+            lfo_rate = @min(20.0, lfo_rate + 0.5);
+            synth.setLfoRate(0, lfo_rate);
+        }
+        if (rl.isKeyPressed(.three)) {
+            lfo_depth = @max(0.0, lfo_depth - 0.1);
+            synth.setLfoDepth(0, lfo_depth);
+        }
+        if (rl.isKeyPressed(.four)) {
+            lfo_depth = @min(1.0, lfo_depth + 0.1);
+            synth.setLfoDepth(0, lfo_depth);
+        }
+        if (rl.isKeyPressed(.five)) {
+            lfo_waveform_idx = (lfo_waveform_idx + 1) % @as(u8, waveform_values.len);
+            synth.setLfoWaveform(0, waveform_values[lfo_waveform_idx]);
+        }
+
         rl.beginDrawing();
         defer rl.endDrawing();
 
@@ -85,6 +115,20 @@ pub fn main() void {
         rl.drawText("QWERTZ keyboard => voice 0", 10, 10, 20, .dark_gray);
         rl.drawText("W E   T Z U     = sharps", 20, 40, 16, .gray);
         rl.drawText("A S D F G H J K = C4..C5", 10, 60, 16, .gray);
-        rl.drawText("ESC to quit", 10, 170, 14, .light_gray);
+
+        // LFO status display
+        var rate_buf: [32]u8 = undefined;
+        const rate_str = std.fmt.bufPrintZ(&rate_buf, "LFO rate:  {d:.1} Hz  [1/2]", .{lfo_rate}) catch "?";
+        rl.drawText(rate_str, 10, 100, 16, .dark_blue);
+
+        var depth_buf: [32]u8 = undefined;
+        const depth_str = std.fmt.bufPrintZ(&depth_buf, "LFO depth: {d:.1}     [3/4]", .{lfo_depth}) catch "?";
+        rl.drawText(depth_str, 10, 120, 16, .dark_blue);
+
+        var wave_buf: [32]u8 = undefined;
+        const wave_str = std.fmt.bufPrintZ(&wave_buf, "LFO wave:  {s}      [5]", .{waveform_names[lfo_waveform_idx]}) catch "?";
+        rl.drawText(wave_str, 10, 140, 16, .dark_blue);
+
+        rl.drawText("ESC to quit", 10, 270, 14, .light_gray);
     }
 }
