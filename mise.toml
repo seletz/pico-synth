@@ -12,7 +12,7 @@ run = "rm -rf {{config_root}}/zig-out"
 run = "zig build"
 
 [tasks.test]
-run = "zig build test"
+run = "zig build test --summary all"
 
 [tasks.burn]
 confirm  = "Insert SD Card"
