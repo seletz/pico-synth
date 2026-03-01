@@ -49,8 +49,11 @@ pub fn main() void {
     // Configure voice 0
     synth.master_gain = 1.0;
     synth.voices[0].gain = 0.5;
-    synth.voices[0].setWaveform(.sine);
+    synth.voices[0].cutoff = 1500;
+    synth.voices[0].setWaveform(.square);
     synth.voices[0].setADSR(0.01, 0.2, 0.5, 0.3);
+    synth.voices[0].setLfoRate(10);
+    synth.voices[0].setLfoDepth(0.5);
 
     rl.setAudioStreamCallback(stream, audioCallback);
     rl.playAudioStream(stream);
