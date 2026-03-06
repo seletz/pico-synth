@@ -33,6 +33,35 @@ pub fn build(b: *std.Build) void {
     mb.install_firmware(blinky, .{});
     mb.install_firmware(synth, .{});
 
+    // Debug firmware builds with ELF output (for use with a debug probe)
+    const blinky_debug = mb.add_firmware(.{
+        .name = "blinky-debug",
+        .target = mb.ports.rp2xxx.boards.raspberrypi.pico2_arm,
+        .optimize = .Debug,
+        .root_source_file = b.path("src/blinky/main.zig"),
+    });
+
+    const synth_debug = mb.add_firmware(.{
+        .name = "synth-debug",
+        .target = mb.ports.rp2xxx.boards.raspberrypi.pico2_arm,
+        .optimize = .Debug,
+        .root_source_file = b.path("src/pico-synth/main.zig"),
+        .imports = &.{
+            .{ .name = "synth", .module = synth_module },
+        },
+    });
+
+    const debugtest = mb.add_firmware(.{
+        .name = "debugtest",
+        .target = mb.ports.rp2xxx.boards.raspberrypi.pico2_arm,
+        .optimize = .Debug,
+        .root_source_file = b.path("src/debugtest/main.zig"),
+    });
+
+    mb.install_firmware(blinky_debug, .{ .format = .elf });
+    mb.install_firmware(synth_debug, .{ .format = .elf });
+    mb.install_firmware(debugtest, .{ .format = .elf });
+
     // Native macOS build for testing DSP code without hardware
     const raylib_dep = b.dependency("raylib_zig", .{
         .target = b.resolveTargetQuery(.{}),
